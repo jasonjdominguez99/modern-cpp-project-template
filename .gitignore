@@ -57,6 +57,9 @@ compile_commands.json
 coverage/
 coverage.info
 
+# Documentation
+docs/
+
 # IDE
 .vscode/*
 !.vscode/settings.json

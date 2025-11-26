@@ -14,7 +14,6 @@ A modern C++23 project template with best practices, testing, benchmarking, and 
 - **Thread Sanitizer** - Race condition detection
 - **Code Coverage** - Track test coverage
 - **clang-format** - Automatic code formatting (Google C++ style)
-- **clang-tidy** - Static analysis
 - **pre-commit hooks** - Enforce code quality
 - **GitHub Actions CI** - Automated testing on Linux & macOS
 - **Convenience scripts** - npm-style build scripts
@@ -25,9 +24,10 @@ A modern C++23 project template with best practices, testing, benchmarking, and 
 
 - CMake 3.25+
 - C++23 compatible compiler:
-  - GCC 13+ or Clang 16+
+  - GCC 14+ or Clang 16+
   - On macOS: Homebrew LLVM recommended (`brew install llvm`)
 - (Optional) lcov for coverage reports: `brew install lcov` / `apt install lcov`
+- (Optional) Doxygen for API documentation: `brew install doxygen` / `apt install doxygen`
 
 ### Build & Run
 
@@ -36,13 +36,13 @@ A modern C++23 project template with best practices, testing, benchmarking, and 
 ./scripts/build.sh
 
 # Run the demo
-./build/hello_world_demo
+./scripts/run.sh
 
 # Run tests
 ./scripts/test.sh
 
 # Run benchmarks
-./build/benchmarks/hello_world_benchmark
+./scripts/benchmark.sh
 
 # Clean build artifacts
 ./scripts/clean.sh
@@ -88,11 +88,14 @@ pre-commit run --all-files
 pre-commit install
 ```
 
-### Static Analysis
+### API Documentation
 
 ```bash
-# Run clang-tidy
-clang-tidy src/*.cpp -p build
+# Generate Doxygen documentation
+./scripts/docs.sh
+
+# View generated docs
+open docs/html/index.html
 ```
 
 ## Project Structure
@@ -106,8 +109,8 @@ clang-tidy src/*.cpp -p build
 ├── scripts/             # Build/test convenience scripts
 ├── .github/workflows/   # CI/CD configuration
 ├── CMakeLists.txt       # CMake configuration
+├── Doxyfile             # Doxygen configuration for API docs
 ├── .clang-format        # Code formatting rules (Google style)
-├── .clang-tidy          # Static analysis rules
 ├── .pre-commit-config.yaml  # Pre-commit hooks
 └── .editorconfig        # Editor configuration
 ```
