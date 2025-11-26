@@ -24,9 +24,16 @@ cd ..
 echo "Generating coverage report..."
 mkdir -p "$COVERAGE_DIR"
 
+# Determine gcov tool based on compiler (default to gcov)
+GCOV_TOOL="gcov"
+if [ -n "$CXX" ] && [[ "$CXX" =~ g\+\+-([0-9]+) ]]; then
+  GCOV_TOOL="gcov-${BASH_REMATCH[1]}"
+fi
+
 # Capture coverage data (suppress warnings for CI)
 lcov --capture --directory "$BUILD_DIR" \
   --output-file "$COVERAGE_DIR/coverage.info" \
+  --gcov-tool "$GCOV_TOOL" \
   --ignore-errors inconsistent,format \
   --quiet
 
