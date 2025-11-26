@@ -34,7 +34,7 @@ fi
 lcov --capture --directory "$BUILD_DIR" \
   --output-file "$COVERAGE_DIR/coverage.info" \
   --gcov-tool "$GCOV_TOOL" \
-  --ignore-errors inconsistent,format \
+  --ignore-errors inconsistent,format,mismatch \
   --quiet
 
 # Remove system and test files from coverage
