@@ -1,7 +1,9 @@
 # C++ Project Template
 
-[![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions)
-[![codecov](https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO)
+[![CI](https://github.com/jasonjdominguez99/modern-cpp-project-template/actions/workflows/ci.yml/badge.svg)](https://github.com/jasonjdominguez99/modern-cpp-project-template)
+[![codecov](https://codecov.io/gh/jasonjdominguez99/modern-cpp-project-template/branch/main/graph/badge.svg)](https://codecov.io/gh/jasonjdominguez99/modern-cpp-project-template)
+
+> **TODO for template users:** Update the badge URLs above (lines 3-4) to point to your own repository. Replace `jasonjdominguez99/modern-cpp-project-template` with your GitHub username and repository name.
 
 A modern C++23 project template with best practices, testing, benchmarking, and CI/CD.
 
@@ -118,10 +120,15 @@ open docs/html/index.html
 ## Using as a Template
 
 1. Click "Use this template" on GitHub (or clone/fork)
-2. Find and replace `hello_world` with your project name
-3. Update `CMakeLists.txt` project name and version
-4. Update this README with your project details
-5. Start coding!
+2. Update the badge URLs in this README (lines 3-4) with your GitHub username/repo
+3. Set up Codecov:
+   - Create account at [codecov.io](https://codecov.io) and add your repository
+   - Add `CODECOV_TOKEN` as a GitHub secret (Settings → Secrets and variables → Actions)
+   - After first CI run with coverage, verify badges are working
+4. Find and replace `hello_world` with your project name
+5. Update `CMakeLists.txt` project name and version
+6. Update this README with your project details
+7. Start coding!
 
 ## CI/CD
 
@@ -146,7 +153,7 @@ Works with both GCC and Clang. TSAN fully supported.
 
 ## License
 
-[Choose your license - MIT, Apache 2.0, etc.]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
