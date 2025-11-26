@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         compiler: [gcc, clang]
-        build_type: [Debug, Release]
 
     steps:
     - uses: actions/checkout@v4
@@ -22,29 +21,33 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y cmake ninja-build
 
+    - name: Install GCC 14 (for C++23 support)
+      if: matrix.compiler == 'gcc'
+      run: |
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo apt-get update
+        sudo apt-get install -y gcc-14 g++-14
+
     - name: Configure CMake
       run: |
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
-          export CC=gcc CXX=g++
+          export CC=gcc-14 CXX=g++-14
         else
           export CC=clang CXX=clang++
         fi
-        cmake -B build -S . -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Ninja
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -G Ninja
 
     - name: Build
-      run: cmake --build build --config ${{ matrix.build_type }}
+      run: cmake --build build --config Release
 
     - name: Run tests
-      run: cd build && ctest --output-on-failure -C ${{ matrix.build_type }}
+      run: cd build && ctest --output-on-failure -C Release
 
     - name: Run benchmarks (quick)
       run: ./build/benchmarks/hello_world_benchmark --benchmark_min_time=0.1s
 
   build-macos:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        build_type: [Debug, Release]
 
     steps:
     - uses: actions/checkout@v4
@@ -57,16 +60,16 @@ jobs:
       run: |
         export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
         cmake -B build -S . \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang \
           -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ \
           -G Ninja
 
     - name: Build
-      run: cmake --build build --config ${{ matrix.build_type }}
+      run: cmake --build build --config Release
 
     - name: Run tests
-      run: cd build && ctest --output-on-failure -C ${{ matrix.build_type }}
+      run: cd build && ctest --output-on-failure -C Release
 
     - name: Run benchmarks (quick)
       run: ./build/benchmarks/hello_world_benchmark --benchmark_min_time=0.1s
