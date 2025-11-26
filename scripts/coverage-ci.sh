@@ -28,7 +28,7 @@ mkdir -p "$COVERAGE_DIR"
 lcov --capture --directory "$BUILD_DIR" \
   --output-file "$COVERAGE_DIR/coverage.info" \
   --ignore-errors inconsistent,format \
-  --quiet 2>/dev/null || true
+  --quiet 2>/dev/null
 
 # Remove system and test files from coverage
 lcov --remove "$COVERAGE_DIR/coverage.info" \
@@ -36,23 +36,34 @@ lcov --remove "$COVERAGE_DIR/coverage.info" \
   '*/build/_deps/*' \
   '*/tests/*' \
   '*/benchmarks/*' \
+  '*/src/main.cpp' \
   --output-file "$COVERAGE_DIR/coverage.info" \
   --ignore-errors unused \
-  --quiet 2>/dev/null || true
+  --quiet 2>/dev/null
 
 # Show summary
 echo ""
 echo "==============================="
 echo "      Coverage Summary"
 echo "==============================="
-lcov --summary "$COVERAGE_DIR/coverage.info" 2>&1 | grep -E "(lines|functions).*:" || echo "No coverage data found"
+
+# Check if coverage file exists and has data
+if [ ! -f "$COVERAGE_DIR/coverage.info" ] || [ ! -s "$COVERAGE_DIR/coverage.info" ]; then
+    echo "⚠️  Warning: No coverage data generated"
+    echo "   Coverage file not found or empty!"
+    exit 0
+fi
+
+# Display summary (capture full output for better debugging)
+SUMMARY_OUTPUT=$(lcov --summary "$COVERAGE_DIR/coverage.info" 2>&1)
+echo "$SUMMARY_OUTPUT" | grep -E "(lines|functions)" || echo "$SUMMARY_OUTPUT"
 
 # Extract line coverage percentage and check threshold
-COVERAGE=$(lcov --summary "$COVERAGE_DIR/coverage.info" 2>&1 | awk -F'[ :%]+' '/lines/ {print $3}' || echo "0")
+COVERAGE=$(echo "$SUMMARY_OUTPUT" | awk -F'[ :%]+' '/lines/ {print $3}')
 
-if [ "$COVERAGE" = "0" ] || [ -z "$COVERAGE" ]; then
+if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ]; then
     echo ""
-    echo "⚠️  Warning: No coverage data generated"
+    echo "⚠️  Warning: Could not extract coverage percentage"
     echo "   Make sure your tests actually execute source code!"
     exit 0
 fi
