@@ -84,8 +84,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y cmake ninja-build lcov
 
+    - name: Install GCC 14 (for C++23 support)
+      run: |
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo apt-get update
+        sudo apt-get install -y gcc-14 g++-14
+
     - name: Run coverage with threshold check
       run: ./scripts/coverage-ci.sh 70
+      env:
+        CC: gcc-14
+        CXX: g++-14
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
