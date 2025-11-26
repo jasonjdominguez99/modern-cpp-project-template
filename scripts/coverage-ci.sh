@@ -28,7 +28,7 @@ mkdir -p "$COVERAGE_DIR"
 lcov --capture --directory "$BUILD_DIR" \
   --output-file "$COVERAGE_DIR/coverage.info" \
   --ignore-errors inconsistent,format \
-  --quiet 2>/dev/null
+  --quiet
 
 # Remove system and test files from coverage
 lcov --remove "$COVERAGE_DIR/coverage.info" \
@@ -39,7 +39,7 @@ lcov --remove "$COVERAGE_DIR/coverage.info" \
   '*/src/main.cpp' \
   --output-file "$COVERAGE_DIR/coverage.info" \
   --ignore-errors unused \
-  --quiet 2>/dev/null
+  --quiet
 
 # Show summary
 echo ""
