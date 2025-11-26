@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build
+
+    - name: Configure CMake
+      run: |
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          export CC=gcc CXX=g++
+        else
+          export CC=clang CXX=clang++
+        fi
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Ninja
+
+    - name: Build
+      run: cmake --build build --config ${{ matrix.build_type }}
+
+    - name: Run tests
+      run: cd build && ctest --output-on-failure -C ${{ matrix.build_type }}
+
+    - name: Run benchmarks (quick)
+      run: ./build/benchmarks/hello_world_benchmark --benchmark_min_time=0.1s
+
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        brew install cmake ninja llvm
+
+    - name: Configure CMake with Homebrew LLVM
+      run: |
+        export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+        cmake -B build -S . \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang \
+          -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ \
+          -G Ninja
+
+    - name: Build
+      run: cmake --build build --config ${{ matrix.build_type }}
+
+    - name: Run tests
+      run: cd build && ctest --output-on-failure -C ${{ matrix.build_type }}
+
+    - name: Run benchmarks (quick)
+      run: ./build/benchmarks/hello_world_benchmark --benchmark_min_time=0.1s
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build lcov
+
+    - name: Run coverage with threshold check
+      run: ./scripts/coverage-ci.sh 70
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage/coverage.info
+        fail_ci_if_error: false
+        verbose: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
