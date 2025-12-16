@@ -20,7 +20,7 @@ BENCHMARK(BM_GetGreeting);
 static void BM_StringConstruction(benchmark::State& state) {
   const auto size = state.range(0);
   for (auto _ : state) {
-    std::string s(size, 'x');
+    std::string s(static_cast<size_t>(size), 'x');
     benchmark::DoNotOptimize(s.data());
   }
 }
@@ -29,11 +29,11 @@ BENCHMARK(BM_StringConstruction)->Arg(8)->Arg(64)->Arg(512)->Arg(4096);
 // Example: Benchmark with fixture (demonstrates more complex setup)
 class StringFixture : public benchmark::Fixture {
  public:
-  void SetUp(const ::benchmark::State& state) override {
+  void SetUp([[maybe_unused]] const ::benchmark::State& state) override {
     test_string = get_greeting();
   }
 
-  void TearDown(const ::benchmark::State& state) override {
+  void TearDown([[maybe_unused]] const ::benchmark::State& state) override {
     // Cleanup if needed
   }
 

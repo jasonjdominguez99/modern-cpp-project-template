@@ -4,3 +4,4 @@ target_link_libraries(hello_world_benchmark PRIVATE hello_world
                                                     benchmark::benchmark_main)
 target_include_directories(hello_world_benchmark
                            PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_options(hello_world_benchmark PRIVATE ${PROJECT_WARNING_FLAGS})

@@ -9,20 +9,28 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Define warning flags for project targets only (not third-party dependencies)
+set(PROJECT_WARNING_FLAGS -Wall -Wextra -Wpedantic -Wshadow -Wuninitialized
+                          -Wconversion)
+
+# Add compiler-specific warnings
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  list(APPEND PROJECT_WARNING_FLAGS -Wmost -Wthread-safety)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  list(APPEND PROJECT_WARNING_FLAGS -Wduplicated-cond -Wlogical-op)
+endif()
+
+# Add -Werror for Debug builds only
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  list(APPEND PROJECT_WARNING_FLAGS -Werror)
+endif()
+
 # Only disable Apple-specific flags if using GCC on macOS
 if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "Using GCC on macOS - disabling Apple-specific flags")
   set(CMAKE_OSX_ARCHITECTURES "")
   set(CMAKE_OSX_SYSROOT "")
   set(CMAKE_OSX_DEPLOYMENT_TARGET "")
-  # GCC on macOS doesn't support TSAN well, disable it
-  set(ENABLE_TSAN
-      OFF
-      CACHE BOOL "TSAN not supported with GCC on macOS" FORCE)
-  message(
-    WARNING
-      "Thread Sanitizer (TSAN) is not supported with GCC on macOS ARM64 - disabling"
-  )
 endif()
 
 # Configure Homebrew LLVM/Clang to use the correct libc++
@@ -49,7 +57,50 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Add sanitizer options
-option(ENABLE_TSAN "Enable Thread Sanitizer" ON)
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
+option(ENABLE_TSAN "Enable Thread Sanitizer" OFF)
+
+# GCC on macOS doesn't include sanitizer runtime libraries - disable them
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(ENABLE_ASAN)
+    message(
+      WARNING
+        "Address Sanitizer (ASAN) is not supported with GCC on macOS - disabling"
+    )
+    set(ENABLE_ASAN
+        OFF
+        CACHE BOOL "ASAN not supported with GCC on macOS" FORCE)
+  endif()
+  if(ENABLE_UBSAN)
+    message(
+      WARNING
+        "Undefined Behavior Sanitizer (UBSAN) is not supported with GCC on macOS - disabling"
+    )
+    set(ENABLE_UBSAN
+        OFF
+        CACHE BOOL "UBSAN not supported with GCC on macOS" FORCE)
+  endif()
+  if(ENABLE_TSAN)
+    message(
+      WARNING
+        "Thread Sanitizer (TSAN) is not supported with GCC on macOS - disabling"
+    )
+    set(ENABLE_TSAN
+        OFF
+        CACHE BOOL "TSAN not supported with GCC on macOS" FORCE)
+  endif()
+endif()
+
+if(ENABLE_ASAN)
+  add_compile_options(-fsanitize=address)
+  add_link_options(-fsanitize=address)
+endif()
+
+if(ENABLE_UBSAN)
+  add_compile_options(-fsanitize=undefined)
+  add_link_options(-fsanitize=undefined)
+endif()
 
 if(ENABLE_TSAN)
   add_compile_options(-fsanitize=thread)
@@ -78,38 +129,51 @@ set(gtest_force_shared_crt
     CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# Fetch Google Benchmark
-FetchContent_Declare(
-  googlebenchmark
-  GIT_REPOSITORY https://github.com/google/benchmark.git
-  GIT_TAG v1.9.1)
-set(BENCHMARK_ENABLE_TESTING
-    OFF
-    CACHE BOOL "" FORCE)
-set(BENCHMARK_ENABLE_GTEST_TESTS
-    OFF
-    CACHE BOOL "" FORCE)
-set(HAVE_STD_REGEX
-    ON
-    CACHE BOOL "" FORCE)
-set(RUN_HAVE_STD_REGEX
-    1
-    CACHE STRING "" FORCE)
-FetchContent_MakeAvailable(googlebenchmark)
+# Benchmark support (opt-in, use ./scripts/benchmark.sh to enable)
+option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
+
+if(BUILD_BENCHMARKS)
+  FetchContent_Declare(
+    googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.9.1)
+  set(BENCHMARK_ENABLE_TESTING
+      OFF
+      CACHE BOOL "" FORCE)
+  set(BENCHMARK_ENABLE_GTEST_TESTS
+      OFF
+      CACHE BOOL "" FORCE)
+  set(HAVE_STD_REGEX
+      ON
+      CACHE BOOL "" FORCE)
+  set(RUN_HAVE_STD_REGEX
+      1
+      CACHE STRING "" FORCE)
+  FetchContent_MakeAvailable(googlebenchmark)
+endif()
 
 # Main library
 add_library(hello_world STATIC src/hello_world.cpp)
 target_include_directories(
   hello_world PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                      $<INSTALL_INTERFACE:include>)
+target_compile_options(hello_world PRIVATE ${PROJECT_WARNING_FLAGS})
 
 # Main executable
 add_executable(hello_world_demo src/main.cpp)
 target_link_libraries(hello_world_demo PRIVATE hello_world)
+target_compile_options(hello_world_demo PRIVATE ${PROJECT_WARNING_FLAGS})
 
 # Enable testing
 enable_testing()
 
 # Add subdirectories
 add_subdirectory(tests)
-add_subdirectory(benchmarks)
+
+if(BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
+  message(STATUS "Benchmarks enabled")
+else()
+  message(
+    STATUS "Benchmarks disabled (run ./scripts/benchmark.sh to build and run)")
+endif()

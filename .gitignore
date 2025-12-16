@@ -43,6 +43,7 @@
 # Build files
 build/
 cmake-build-*/
+.build_config
 
 # CMake
 CMakeCache.txt
